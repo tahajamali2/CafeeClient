@@ -1,0 +1,14 @@
+c:\users\dell\documents\visual studio 2013\Projects\CafeClient\CafeClient\bin\Debug\CafeClient.exe.config
+c:\users\dell\documents\visual studio 2013\Projects\CafeClient\CafeClient\bin\Debug\CafeClient.exe
+c:\users\dell\documents\visual studio 2013\Projects\CafeClient\CafeClient\bin\Debug\CafeClient.pdb
+c:\users\dell\documents\visual studio 2013\Projects\CafeClient\CafeClient\bin\Debug\MetroFramework.Design.dll
+c:\users\dell\documents\visual studio 2013\Projects\CafeClient\CafeClient\bin\Debug\MetroFramework.dll
+c:\users\dell\documents\visual studio 2013\Projects\CafeClient\CafeClient\bin\Debug\MetroFramework.Fonts.dll
+c:\users\dell\documents\visual studio 2013\Projects\CafeClient\CafeClient\obj\Debug\CafeClient.csprojResolveAssemblyReference.cache
+c:\users\dell\documents\visual studio 2013\Projects\CafeClient\CafeClient\obj\Debug\CafeClient.LockWindow.resources
+c:\users\dell\documents\visual studio 2013\Projects\CafeClient\CafeClient\obj\Debug\CafeClient.Properties.Resources.resources
+c:\users\dell\documents\visual studio 2013\Projects\CafeClient\CafeClient\obj\Debug\CafeClient.csproj.GenerateResource.Cache
+c:\users\dell\documents\visual studio 2013\Projects\CafeClient\CafeClient\obj\Debug\CafeClient.exe
+c:\users\dell\documents\visual studio 2013\Projects\CafeClient\CafeClient\obj\Debug\CafeClient.pdb
+C:\Users\DeLL\documents\visual studio 2013\Projects\CafeClient\CafeClient\obj\Debug\CafeClient.CommandControl.resources
+C:\Users\DeLL\documents\visual studio 2013\Projects\CafeClient\CafeClient\obj\Debug\CafeClient.MainWindow.resources
