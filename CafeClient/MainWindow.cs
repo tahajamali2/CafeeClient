@@ -16,6 +16,10 @@ namespace CafeClient
     public partial class MainWindow : MetroForm
     {
         Computer pc = null;
+        public string adapter_public;
+        public string ip_public;
+        public string is_monitorable_public;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -30,7 +34,17 @@ namespace CafeClient
                 string ip = "";
                 foreach (var adapter in adapters)
                 {
-                    ip = adapter.GetIPProperties().UnicastAddresses.Where(x => x.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).Select(y => y.Address.ToString()).SingleOrDefault();
+                    if (adapter.OperationalStatus == OperationalStatus.Down)
+                    {
+                        ip = "0.0.0.0";
+                    }
+
+                    else
+                    {
+                        ip = adapter.GetIPProperties().UnicastAddresses.Where(x => x.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).Select(y => y.Address.ToString()).SingleOrDefault();
+                        
+                    }
+
                     listBox_adapters.Items.Add(adapter.Name + "  -  (" + ip + ")");
                 }
 
@@ -61,6 +75,28 @@ namespace CafeClient
 
                 }
 
+
+                if (config.AppSettings.Settings["MonitorCheck"] != null)
+                {
+                    if (config.AppSettings.Settings["MonitorCheck"].Value.Equals("Yes"))
+                    {
+                        checkBox_monitorprocess.Checked = true;
+                        is_monitorable_public = "Yes";
+                    }
+
+                    else
+                    {
+                        checkBox_monitorprocess.Checked = false;
+                        is_monitorable_public = "No";
+                    }
+                }
+
+                else
+                {
+                    is_monitorable_public = "No";
+                }
+
+
                 if (!label_pcname_value.Text.Equals("Not Available"))
                 {
                     button_start.Enabled = true;
@@ -90,6 +126,11 @@ namespace CafeClient
                         checkBox_autostart.Checked = false;
                     }
                 }
+
+                adapter_public = config.AppSettings.Settings["Adapter"].Value.Split(new string[] { "  -  (" }, StringSplitOptions.None)[0];
+                ip_public = label_ip_value.Text;
+
+         
 
             }
             catch (Exception ex)
@@ -137,12 +178,32 @@ namespace CafeClient
 
         private void button_start_Click(object sender, EventArgs e)
         {
-            if (pc != null)
+            try
             {
-                LockWindow lw = new LockWindow(pc,this);
-                lw.Show();
-                this.Visible = false;
-                this.ShowInTaskbar = false;
+                if (pc != null)
+                {
+                    if (MiscClass.CheckNetworkAvailablity(adapter_public, ip_public))
+                    {
+                        if (checkBox_monitorprocess.Checked)
+                        {
+                            is_monitorable_public = "Yes";
+                        }
+
+                        else
+                        {
+                            is_monitorable_public = "No";
+                        }
+
+                        LockWindow lw = new LockWindow(pc, this);
+                        lw.Show();
+                        this.Visible = false;
+                        this.ShowInTaskbar = false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -156,6 +217,19 @@ namespace CafeClient
             else
             {
                 SetConfigValue("Autostart", "No");
+            }
+        }
+
+        private void checkBox_monitorprocess_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox_monitorprocess.Checked)
+            {
+                SetConfigValue("MonitorCheck", "Yes");
+            }
+
+            else
+            {
+                SetConfigValue("MonitorCheck", "No");
             }
         }
     }

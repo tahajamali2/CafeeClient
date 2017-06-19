@@ -29,13 +29,15 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LockWindow));
             this.metroTextBox_accesscode = new System.Windows.Forms.TextBox();
             this.metroButton_redeem = new MetroFramework.Controls.MetroButton();
             this.toolTip_redeem = new System.Windows.Forms.ToolTip(this.components);
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.toolTip_setting = new System.Windows.Forms.ToolTip(this.components);
             this.pictureBox_setting = new System.Windows.Forms.PictureBox();
             this.pictureBox_bg = new System.Windows.Forms.PictureBox();
-            this.toolTip_setting = new System.Windows.Forms.ToolTip(this.components);
+            this.backgroundWorker_processviewer = new System.ComponentModel.BackgroundWorker();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_setting)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_bg)).BeginInit();
             this.SuspendLayout();
@@ -80,6 +82,7 @@
             this.pictureBox_setting.Size = new System.Drawing.Size(40, 40);
             this.pictureBox_setting.TabIndex = 3;
             this.pictureBox_setting.TabStop = false;
+            this.pictureBox_setting.Click += new System.EventHandler(this.pictureBox_setting_Click);
             // 
             // pictureBox_bg
             // 
@@ -90,6 +93,12 @@
             this.pictureBox_bg.Size = new System.Drawing.Size(281, 250);
             this.pictureBox_bg.TabIndex = 0;
             this.pictureBox_bg.TabStop = false;
+            // 
+            // backgroundWorker_processviewer
+            // 
+            this.backgroundWorker_processviewer.WorkerReportsProgress = true;
+            this.backgroundWorker_processviewer.WorkerSupportsCancellation = true;
+            this.backgroundWorker_processviewer.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker_processviewer_DoWork);
             // 
             // LockWindow
             // 
@@ -102,12 +111,14 @@
             this.Controls.Add(this.metroButton_redeem);
             this.Controls.Add(this.metroTextBox_accesscode);
             this.Controls.Add(this.pictureBox_bg);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Movable = false;
             this.Name = "LockWindow";
             this.Resizable = false;
             this.ShadowType = MetroFramework.Forms.MetroFormShadowType.None;
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.LockWindow_FormClosed);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.Shown += new System.EventHandler(this.LockWindow_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_setting)).EndInit();
@@ -123,9 +134,10 @@
         private System.Windows.Forms.TextBox metroTextBox_accesscode;
         private MetroFramework.Controls.MetroButton metroButton_redeem;
         private System.Windows.Forms.ToolTip toolTip_redeem;
-        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        public System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.PictureBox pictureBox_setting;
         private System.Windows.Forms.ToolTip toolTip_setting;
+        public System.ComponentModel.BackgroundWorker backgroundWorker_processviewer;
 
     }
 }

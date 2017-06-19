@@ -49,8 +49,8 @@ namespace CafeClient
                             returncom.IPAddress = dtreader.GetValue(2).ToString();
                             returncom.FloorId = Convert.ToInt32(dtreader.GetValue(3));
                             returncom.IsActive = Convert.ToBoolean(dtreader.GetValue(4));
-                            returncom.Status = Convert.ToInt32(dtreader.GetValue(5));
-                            returncom.Port = Convert.ToInt32(dtreader.GetValue(6) == null ? 13000 : dtreader.GetValue(6));
+                            returncom.Status = Convert.ToInt32(dtreader.GetValue(6));
+                            returncom.Port = Convert.ToInt32(dtreader.GetValue(5) == null ? 13000 : dtreader.GetValue(5));
 
                             break;
                         }

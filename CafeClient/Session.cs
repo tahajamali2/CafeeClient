@@ -204,5 +204,33 @@ namespace CafeClient
                 throw new Exception(ex.Message);
             }
         }
+
+        public static bool PauseSession_CloseUnexpectedly(string sessionid, string datetime)
+        {
+            try
+            {
+
+                using (SqlConnection connection = new SqlConnection(ConfigurationManager.ConnectionStrings["Connection"].ToString()))
+                {
+
+                    connection.Open();
+
+                    SqlCommand command = new SqlCommand("PauseSession_CloseUnexpectedly", connection);
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@sessionid", sessionid);
+                    command.Parameters.AddWithValue("@time", Convert.ToDateTime(datetime));
+                    command.Parameters.AddWithValue("@comment", "Session Paused Due To Network Disconnect.");
+                    
+
+                    command.ExecuteNonQuery();
+
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
     }
 }

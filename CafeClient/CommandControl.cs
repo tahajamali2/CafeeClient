@@ -13,20 +13,34 @@ using System.Windows.Forms;
 using MetroFramework.Forms;
 using System.Diagnostics;
 using Utilities;
+using System.Management;
+using System.Net.NetworkInformation;
+using System.Configuration;
+using System.Threading;
+using System.IO;
 
 namespace CafeClient
 {
     public partial class CommandControl : MetroForm
     {
-        TcpListener server = null;
+        public TcpListener server = null;
         int hour;
         int min;
         int sec;
         bool isenter=false;
 
+        bool isdisconnect = false;
+
         Session mysession;
         Computer mycomputer;
         MainWindow mainwind;
+
+        string ismonitoringable;
+
+
+        ManagementEventWatcher eventWatcher;
+
+        List<PrintJob> printjobs = new List<PrintJob>();
 
         public CommandControl()
         {
@@ -49,7 +63,41 @@ namespace CafeClient
             hook.unhook();
 
             toolTip_setting.SetToolTip(pictureBox_setting, "Setting");
+            toolTip_setting.SetToolTip(pictureBox_minimize, "Minimize");
+
+            WqlEventQuery WQLquery = new WqlEventQuery("SELECT * FROM __InstanceOperationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_PrintJob'");
+            eventWatcher = new ManagementEventWatcher(WQLquery);
+            eventWatcher.EventArrived += eventWatcher_EventArrived;
+            eventWatcher.Start();
+
+            NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
+
+
+            ismonitoringable = main.is_monitorable_public;
+
             this.Focus();
+        }
+
+
+        private void NetworkChange_NetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs e)
+        {
+            if (!e.IsAvailable)
+            {
+                isdisconnect = true;
+            }
+        }
+
+
+        private void eventWatcher_EventArrived(object sender, EventArrivedEventArgs e)
+        {
+            try
+            {
+                PrintJob.DumpJobsToDatabase(mysession.Id, mycomputer.Id);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
 
@@ -57,7 +105,7 @@ namespace CafeClient
         {
 
             backgroundWorker1.RunWorkerAsync();
-
+            backgroundWorker_processviewer.RunWorkerAsync();
         }
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
@@ -106,7 +154,7 @@ namespace CafeClient
                             // Process the data sent by the client.
 
 
-                            byte[] msg = System.Text.Encoding.ASCII.GetBytes(data);
+                            byte[] msg = System.Text.Encoding.ASCII.GetBytes("Received");
 
                             // Send back a response.
                             stream.Write(msg, 0, msg.Length);
@@ -279,6 +327,11 @@ namespace CafeClient
                             }
                         }
 
+                        else if (e.UserState.ToString().StartsWith("Message:"))
+                        {
+                            MessageBox.Show(e.UserState.ToString().Split(':')[1], "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+
                         else
                         {
                             if (!e.UserState.ToString().EndsWith("WSACancelBlockingCall"))
@@ -334,6 +387,28 @@ namespace CafeClient
             if (!isenter)
             {
                 label_second.Text = (sec + 1).ToString("00");
+            }
+
+            if (isdisconnect)
+            {
+                try
+                {
+                    
+
+                            // close the form on the forms thread
+                            LockWindow lw = new LockWindow(mycomputer, mainwind);
+                            lw.Show();
+                            server.Stop();
+                            backgroundWorker1.CancelAsync();
+                            MiscClass.SetConfigValue("ActiveSession", mysession.Id.ToString() + "{{Session}}" + DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss"));
+                            this.Close();
+
+                }
+
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
@@ -392,5 +467,68 @@ namespace CafeClient
                 }
             }
         }
+
+        private void pictureBox_minimize_Click(object sender, EventArgs e)
+        {
+            //this.WindowState = FormWindowState.Minimized;
+            this.Visible = false;
+            notifyIcon_minimize.Visible = true;
+            notifyIcon_minimize.ShowBalloonTip(3000);
+        }
+
+        private void notifyIcon_minimize_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            //this.WindowState = FormWindowState.Normal;
+            this.Visible = true;
+            //this.Show();
+            notifyIcon_minimize.Visible = false;
+        }
+
+        private void pictureBox_setting_Click(object sender, EventArgs e)
+        {
+            AdminPassword ap = new AdminPassword(mainwind, this, mysession);
+            ap.Show();
+        }
+
+        private void CommandControl_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            PrintJob.CancelPrintJobs();
+            eventWatcher.Dispose();
+            backgroundWorker_processviewer.CancelAsync();
+        }
+
+        private void backgroundWorker_processviewer_DoWork(object sender, DoWorkEventArgs e)
+        {
+            try
+            {
+                if (ismonitoringable.Equals("Yes"))
+                {
+                    System.Configuration.Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                    string applicationname = config.AppSettings.Settings["MonitoringApplication"].Value;
+
+                    while (true)
+                    {
+                        if ((sender as BackgroundWorker).CancellationPending == true)
+                        {
+                            e.Cancel = true;
+                            return; // abort work, if it's cancelled
+                        }
+
+                        if (Process.GetProcessesByName(applicationname).Length < 1)
+                        {
+                            System.Diagnostics.Process.Start(Path.GetDirectoryName(Application.ExecutablePath) + "\\" + applicationname + ".exe");
+                            Thread.Sleep(500);
+                        }
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+
     }
 }

@@ -15,17 +15,23 @@ using Utilities;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
+using System.Management;
+using System.Configuration;
+using System.IO;
+using System.Threading;
 
 namespace CafeClient
 {
     public partial class LockWindow : MetroForm
     {
-        TcpListener server = null;
+        public TcpListener server = null;
         string message = string.Empty;
 
         globalKeyboardHook gkh = new globalKeyboardHook();
         Computer mypc = new Computer();
         MainWindow tw;
+
+        string ismonitorable = "No";
         public LockWindow()
         {
             InitializeComponent();
@@ -47,6 +53,8 @@ namespace CafeClient
             mypc = pc;
             tw = mw;
 
+            ismonitorable = mw.is_monitorable_public;
+
         }
 
         public LockWindow(Computer pc, MainWindow mw,string popupmessage)
@@ -63,6 +71,7 @@ namespace CafeClient
             mypc = pc;
             tw = mw;
 
+            ismonitorable = mw.is_monitorable_public;
         }
 
         void gkh_KeyDown(object sender, KeyEventArgs e)
@@ -88,26 +97,48 @@ namespace CafeClient
             {
                 try
                 {
-                    var sessionobject = Session.GetNonClosedSession(mypc.Id, metroTextBox_accesscode.Text.Trim());
-
-                    if(sessionobject.StartSession("Session Start By User",null))
+                    if (MiscClass.CheckNetworkAvailablity(tw.adapter_public, tw.ip_public))
                     {
-                        CommandControl cc = new CommandControl(sessionobject, mypc,tw,gkh);
-                        server.Stop();
-                        backgroundWorker1.CancelAsync();
-                        cc.Show();
-                        this.Close();
-                    }
+                        if (!MiscClass.GetConfigValue("ActiveSession").Equals(""))
+                        {
+                            string[] values = MiscClass.GetConfigValue("ActiveSession").Split(new string[] { "{{Session}}" }, StringSplitOptions.None);
 
-                    else
-                    {
-                        MessageBox.Show("Some thing went wrong while starting your session !", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            if (Session.PauseSession_CloseUnexpectedly(values[0], values[1]))
+                            {
+                                MiscClass.SetConfigValue("ActiveSession", "");
+                            }
+                        }
+
+                        metroTextBox_accesscode.Enabled = false;
+                        metroButton_redeem.Enabled = false;
+
+                        var sessionobject = Session.GetNonClosedSession(mypc.Id, metroTextBox_accesscode.Text.Trim());
+
+                        if (sessionobject.StartSession("Session Start By User", null))
+                        {
+                            CommandControl cc = new CommandControl(sessionobject, mypc, tw, gkh);
+                            server.Stop();
+                            backgroundWorker1.CancelAsync();
+                            cc.Show();
+                            this.Close();
+                        }
+
+                        else
+                        {
+                            MessageBox.Show("Some thing went wrong while starting your session !", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
                     }
 
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message+"1", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                finally
+                {
+                    metroTextBox_accesscode.Enabled = true;
+                    metroButton_redeem.Enabled = true;
                 }
             }
             else
@@ -205,7 +236,7 @@ namespace CafeClient
                             // Process the data sent by the client.
 
 
-                            byte[] msg = System.Text.Encoding.ASCII.GetBytes(data);
+                            byte[] msg = System.Text.Encoding.ASCII.GetBytes("Received");
 
                             // Send back a response.
                             stream.Write(msg, 0, msg.Length);
@@ -221,9 +252,9 @@ namespace CafeClient
 
                 }
             }
-            catch (SocketException ex)
+            catch (Exception ex)
             {
-                (sender as BackgroundWorker).ReportProgress(0, ex.Message+"2");
+                (sender as BackgroundWorker).ReportProgress(0, ex.Message);
             }
         }
 
@@ -234,8 +265,10 @@ namespace CafeClient
             if (e.UserState != null)
             {
 
-                if (!e.UserState.ToString().Equals("A blocking operation was interrupted by a call to WSACancelBlockingCall2"))
+                if (!e.UserState.ToString().Equals("A blocking operation was interrupted by a call to WSACancelBlockingCall"))
                 {
+                    if (e.UserState.ToString().StartsWith("Command:"))
+                    { 
                     if (e.UserState.ToString().Split(':').Count() >= 1 && e.UserState.ToString().Split(':').Count() <= 3)
                     {
                         if (e.UserState.ToString().Split(':')[1].Equals("Shutdown"))
@@ -279,6 +312,19 @@ namespace CafeClient
                     {
                         MessageBox.Show("Invalid Command", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
+
+                
+                    }
+
+                    else if (e.UserState.ToString().StartsWith("Message:"))
+                    {
+                        MessageBox.Show(e.UserState.ToString().Split(':')[1], "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+
+                    else
+                    {
+                        MessageBox.Show(e.UserState.ToString());
+                    }
                 }
 
                 }
@@ -290,7 +336,7 @@ namespace CafeClient
 
             catch(Exception ex)
             {
-                MessageBox.Show(ex.Message+"3","Error",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                MessageBox.Show(ex.Message,"Error",MessageBoxButtons.OK,MessageBoxIcon.Error);
             }
 
         }
@@ -303,11 +349,57 @@ namespace CafeClient
         private void LockWindow_Shown(object sender, EventArgs e)
         {
             backgroundWorker1.RunWorkerAsync();
+            backgroundWorker_processviewer.RunWorkerAsync();
 
             if (!message.Trim().Equals(""))
             {
                 MessageBox.Show(message.Trim(), "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
+        }
+
+        private void pictureBox_setting_Click(object sender, EventArgs e)
+        {
+            AdminPassword ap = new AdminPassword(tw, this,gkh);
+            ap.Show();
+        }
+
+        private void LockWindow_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            backgroundWorker_processviewer.CancelAsync();
+        }
+
+        private void backgroundWorker_processviewer_DoWork(object sender, DoWorkEventArgs e)
+        {
+            try
+            {
+                if (ismonitorable.Equals("Yes"))
+                {
+                    System.Configuration.Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                    string applicationname = config.AppSettings.Settings["MonitoringApplication"].Value;
+
+                    while (true)
+                    {
+                        if ((sender as BackgroundWorker).CancellationPending == true)
+                        {
+                            e.Cancel = true;
+                            return; // abort work, if it's cancelled
+                        }
+
+                        if (Process.GetProcessesByName(applicationname).Length < 1)
+                        {
+                            System.Diagnostics.Process.Start(Path.GetDirectoryName(Application.ExecutablePath)+"\\"+applicationname+".exe");
+                            Thread.Sleep(500);
+                        }
+                    }
+  
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+
         }
         
     }

@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.label_pcname = new System.Windows.Forms.Label();
             this.label_pcname_value = new System.Windows.Forms.Label();
             this.label_ip_value = new System.Windows.Forms.Label();
@@ -39,6 +40,7 @@
             this.button_start = new System.Windows.Forms.Button();
             this.checkBox_autostart = new System.Windows.Forms.CheckBox();
             this.toolTip_startbutton = new System.Windows.Forms.ToolTip(this.components);
+            this.checkBox_monitorprocess = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // label_pcname
@@ -86,7 +88,7 @@
             this.listBox_adapters.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.listBox_adapters.FormattingEnabled = true;
             this.listBox_adapters.ItemHeight = 21;
-            this.listBox_adapters.Location = new System.Drawing.Point(26, 124);
+            this.listBox_adapters.Location = new System.Drawing.Point(26, 137);
             this.listBox_adapters.Name = "listBox_adapters";
             this.listBox_adapters.Size = new System.Drawing.Size(400, 193);
             this.listBox_adapters.TabIndex = 4;
@@ -95,7 +97,7 @@
             // label_adapters
             // 
             this.label_adapters.AutoSize = true;
-            this.label_adapters.Location = new System.Drawing.Point(24, 102);
+            this.label_adapters.Location = new System.Drawing.Point(24, 115);
             this.label_adapters.Name = "label_adapters";
             this.label_adapters.Size = new System.Drawing.Size(49, 13);
             this.label_adapters.TabIndex = 5;
@@ -107,7 +109,7 @@
             this.metroButton_save.Cursor = System.Windows.Forms.Cursors.Hand;
             this.metroButton_save.Enabled = false;
             this.metroButton_save.ForeColor = System.Drawing.Color.White;
-            this.metroButton_save.Location = new System.Drawing.Point(332, 341);
+            this.metroButton_save.Location = new System.Drawing.Point(332, 354);
             this.metroButton_save.Name = "metroButton_save";
             this.metroButton_save.Size = new System.Drawing.Size(94, 23);
             this.metroButton_save.TabIndex = 6;
@@ -144,11 +146,23 @@
             this.checkBox_autostart.UseVisualStyleBackColor = true;
             this.checkBox_autostart.CheckedChanged += new System.EventHandler(this.checkBox_autostart_CheckedChanged);
             // 
+            // checkBox_monitorprocess
+            // 
+            this.checkBox_monitorprocess.AutoSize = true;
+            this.checkBox_monitorprocess.Location = new System.Drawing.Point(325, 106);
+            this.checkBox_monitorprocess.Name = "checkBox_monitorprocess";
+            this.checkBox_monitorprocess.Size = new System.Drawing.Size(102, 17);
+            this.checkBox_monitorprocess.TabIndex = 9;
+            this.checkBox_monitorprocess.Text = "Monitor Process";
+            this.checkBox_monitorprocess.UseVisualStyleBackColor = true;
+            this.checkBox_monitorprocess.CheckedChanged += new System.EventHandler(this.checkBox_monitorprocess_CheckedChanged);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(449, 375);
+            this.ClientSize = new System.Drawing.Size(449, 392);
+            this.Controls.Add(this.checkBox_monitorprocess);
             this.Controls.Add(this.checkBox_autostart);
             this.Controls.Add(this.button_start);
             this.Controls.Add(this.metroButton_save);
@@ -158,6 +172,7 @@
             this.Controls.Add(this.label_ip);
             this.Controls.Add(this.label_pcname_value);
             this.Controls.Add(this.label_pcname);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "MainWindow";
             this.Resizable = false;
@@ -180,5 +195,6 @@
         private System.Windows.Forms.Button button_start;
         private System.Windows.Forms.CheckBox checkBox_autostart;
         private System.Windows.Forms.ToolTip toolTip_startbutton;
+        private System.Windows.Forms.CheckBox checkBox_monitorprocess;
     }
 }
