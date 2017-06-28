@@ -93,7 +93,7 @@ namespace CafeClient
 
         private void metroButton_redeem_Click(object sender, EventArgs e)
         {
-            if (metroTextBox_accesscode.Text.Trim().Length == 8)
+            if (metroTextBox_accesscode.Text.Trim().Length == 4)
             {
                 try
                 {
@@ -143,7 +143,7 @@ namespace CafeClient
             }
             else
             {
-                MessageBox.Show("Access code should be 8 characters long.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Access code should be 4 characters long.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             
         }

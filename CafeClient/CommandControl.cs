@@ -47,6 +47,8 @@ namespace CafeClient
 
         List<PrintJob> printjobs = new List<PrintJob>();
 
+        DateTime latestlogintime;
+
         public CommandControl()
         {
             InitializeComponent();
@@ -113,6 +115,7 @@ namespace CafeClient
 
             pagescount = currentsession.PagesPrinted.ToString();
 
+            latestlogintime = Session.GetLatestLoginTime(currentcomputer.Id, currentsession.Id);
 
             this.Focus();
 
@@ -161,23 +164,26 @@ namespace CafeClient
                         var parser = new CsvReader(new StringReader(reader.ReadToEnd())); // ...
                         while (parser.Read())
                         {
-                            dr = dtdata.NewRow();
-                            dr["Time"] = parser.GetField<DateTime>(0);
-                            dr["User"] = parser.GetField<string>(1);
-                            dr["Pages"] = parser.GetField<int>(2);
-                            dr["Copies"] = parser.GetField<int>(3);
-                            dr["Printer"] = parser.GetField<string>(4);
-                            dr["DocumentName"] = parser.GetField<string>(5);
-                            dr["Client"] = parser.GetField<string>(6);
-                            dr["PaperSize"] = parser.GetField<string>(7);
-                            dr["Language"] = parser.GetField<string>(8);
-                            dr["Height"] = parser.GetField<string>(9);
-                            dr["Width"] = parser.GetField<string>(10);
-                            dr["Duplex"] = parser.GetField<string>(11);
-                            dr["Grayscale"] = parser.GetField<string>(12);
-                            dr["Size"] = parser.GetField<string>(13);
+                            if (parser.GetField<DateTime>(0).CompareTo(latestlogintime) >= 0)
+                            {
+                                dr = dtdata.NewRow();
+                                dr["Time"] = parser.GetField<DateTime>(0);
+                                dr["User"] = parser.GetField<string>(1);
+                                dr["Pages"] = parser.GetField<int>(2);
+                                dr["Copies"] = parser.GetField<int>(3);
+                                dr["Printer"] = parser.GetField<string>(4);
+                                dr["DocumentName"] = parser.GetField<string>(5);
+                                dr["Client"] = parser.GetField<string>(6);
+                                dr["PaperSize"] = parser.GetField<string>(7);
+                                dr["Language"] = parser.GetField<string>(8);
+                                dr["Height"] = parser.GetField<string>(9);
+                                dr["Width"] = parser.GetField<string>(10);
+                                dr["Duplex"] = parser.GetField<string>(11);
+                                dr["Grayscale"] = parser.GetField<string>(12);
+                                dr["Size"] = parser.GetField<string>(13);
 
-                            dtdata.Rows.Add(dr);
+                                dtdata.Rows.Add(dr);
+                            }
 
                         }
                     }
@@ -199,6 +205,7 @@ namespace CafeClient
             backgroundWorker_processviewer.RunWorkerAsync();
         }
 
+        private void eventWatcher_EventArrived_empty(object sender, EventArrivedEventArgs e) { }
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
 
@@ -588,8 +595,11 @@ namespace CafeClient
         private void CommandControl_FormClosed(object sender, FormClosedEventArgs e)
         {
             PrintJob.CancelPrintJobs();
+            UpdatePrintLog();
+            eventWatcher.EventArrived -= eventWatcher_EventArrived;
             eventWatcher.Dispose();
             backgroundWorker_processviewer.CancelAsync();
+            this.Dispose();
         }
 
         private void backgroundWorker_processviewer_DoWork(object sender, DoWorkEventArgs e)
@@ -623,6 +633,62 @@ namespace CafeClient
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
+        }
+
+        public void UpdatePrintLog()
+        {
+            if (File.Exists(MiscClass.GetConfigValue("LogPath") + "\\papercut-print-log-" + DateTime.Now.ToString("yyyy-MM-dd") + ".csv"))
+            {
+                dtdata.Rows.Clear();
+
+
+                File.Copy(MiscClass.GetConfigValue("LogPath") + "\\papercut-print-log-" + DateTime.Now.ToString("yyyy-MM-dd") + ".csv", MiscClass.GetConfigValue("LogPath") + "\\papercut-print-log-" + DateTime.Now.ToString("yyyy-MM-dd") + " - Copy.csv", true);
+                if (MiscClass.IsFileLocked(MiscClass.GetConfigValue("LogPath") + "\\papercut-print-log-" + DateTime.Now.ToString("yyyy-MM-dd") + " - Copy.csv"))
+                {
+                    return;
+                }
+
+                try
+                {
+                    using (TextReader reader = File.OpenText(MiscClass.GetConfigValue("LogPath") + "\\papercut-print-log-" + DateTime.Now.ToString("yyyy-MM-dd") + " - Copy.csv"))
+                    {
+                        reader.ReadLine();
+                        // now initialize the CsvReader
+
+                        var parser = new CsvReader(new StringReader(reader.ReadToEnd())); // ...
+                        while (parser.Read())
+                        {
+                            if (parser.GetField<DateTime>(0).CompareTo(latestlogintime) >= 0)
+                            {
+                                dr = dtdata.NewRow();
+                                dr["Time"] = parser.GetField<DateTime>(0);
+                                dr["User"] = parser.GetField<string>(1);
+                                dr["Pages"] = parser.GetField<int>(2);
+                                dr["Copies"] = parser.GetField<int>(3);
+                                dr["Printer"] = parser.GetField<string>(4);
+                                dr["DocumentName"] = parser.GetField<string>(5);
+                                dr["Client"] = parser.GetField<string>(6);
+                                dr["PaperSize"] = parser.GetField<string>(7);
+                                dr["Language"] = parser.GetField<string>(8);
+                                dr["Height"] = parser.GetField<string>(9);
+                                dr["Width"] = parser.GetField<string>(10);
+                                dr["Duplex"] = parser.GetField<string>(11);
+                                dr["Grayscale"] = parser.GetField<string>(12);
+                                dr["Size"] = parser.GetField<string>(13);
+
+                                dtdata.Rows.Add(dr);
+                            }
+
+                        }
+                    }
+
+                    pagescount = PrintJob.DumpJobsToDatabase(mysession.Id, mycomputer.Id, dtdata);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
     }

@@ -234,5 +234,30 @@ namespace CafeClient
                 return false;
             }
         }
+
+        public static DateTime GetLatestLoginTime(int computerid, Guid sessionid)
+        {
+            try
+            {
+
+                using (SqlConnection connection = new SqlConnection(ConfigurationManager.ConnectionStrings["Connection"].ToString()))
+                {
+
+                    connection.Open();
+
+                    SqlCommand command = new SqlCommand("GetLatestLoginTime", connection);
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@computerid", computerid);
+                    command.Parameters.AddWithValue("@sessionid", sessionid);
+
+
+                    return Convert.ToDateTime(command.ExecuteScalar());
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
     }
 }
