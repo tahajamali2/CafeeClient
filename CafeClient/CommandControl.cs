@@ -18,6 +18,7 @@ using System.Net.NetworkInformation;
 using System.Configuration;
 using System.Threading;
 using System.IO;
+using CsvHelper;
 
 namespace CafeClient
 {
@@ -37,8 +38,12 @@ namespace CafeClient
 
         string ismonitoringable;
 
+        string pagescount;
 
         ManagementEventWatcher eventWatcher;
+
+        DataTable dtdata = new DataTable();
+        DataRow dr;
 
         List<PrintJob> printjobs = new List<PrintJob>();
 
@@ -50,6 +55,9 @@ namespace CafeClient
         public CommandControl(Session currentsession,Computer currentcomputer,MainWindow main,globalKeyboardHook hook)
         {
             InitializeComponent();
+
+            this.Location = new Point(Screen.PrimaryScreen.WorkingArea.Width - (this.Width + 60), 60);
+
             mysession = currentsession;
             mycomputer = currentcomputer;
 
@@ -70,13 +78,55 @@ namespace CafeClient
             eventWatcher.EventArrived += eventWatcher_EventArrived;
             eventWatcher.Start();
 
+            //FileSystemWatcher fwatcher = new FileSystemWatcher();
+            //fwatcher.Path = MiscClass.GetConfigValue("LogPath");
+
+            //fwatcher.NotifyFilter =  NotifyFilters.LastWrite | NotifyFilters.FileName;
+
+            //fwatcher.Changed += fwatcher_Changed;
+            //fwatcher.Created += fwatcher_Created;
+
+            //fwatcher.Filter = "*.csv";
+            //fwatcher.EnableRaisingEvents = true;
+
+
             NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
 
 
             ismonitoringable = main.is_monitorable_public;
 
+            dtdata = new DataTable();
+            dtdata.Columns.Add("Time",typeof(DateTime));
+            dtdata.Columns.Add("User", typeof(string));
+            dtdata.Columns.Add("Pages", typeof(int));
+            dtdata.Columns.Add("Copies", typeof(int));
+            dtdata.Columns.Add("Printer", typeof(string));
+            dtdata.Columns.Add("DocumentName", typeof(string));
+            dtdata.Columns.Add("Client", typeof(string));
+            dtdata.Columns.Add("PaperSize", typeof(string));
+            dtdata.Columns.Add("Language", typeof(string));
+            dtdata.Columns.Add("Height", typeof(string));
+            dtdata.Columns.Add("Width", typeof(string));
+            dtdata.Columns.Add("Duplex", typeof(string));
+            dtdata.Columns.Add("Grayscale", typeof(string));
+            dtdata.Columns.Add("Size", typeof(string));
+
+            pagescount = currentsession.PagesPrinted.ToString();
+
+
             this.Focus();
+
         }
+
+        //public void fwatcher_Created(object sender, FileSystemEventArgs e)
+        //{
+            
+        //}
+
+        //public void fwatcher_Changed(object sender, FileSystemEventArgs e)
+        //{
+
+        //}
 
 
         private void NetworkChange_NetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs e)
@@ -90,13 +140,54 @@ namespace CafeClient
 
         private void eventWatcher_EventArrived(object sender, EventArrivedEventArgs e)
         {
-            try
+            if (File.Exists(MiscClass.GetConfigValue("LogPath") + "\\papercut-print-log-" + DateTime.Now.ToString("yyyy-MM-dd") + ".csv"))
             {
-                PrintJob.DumpJobsToDatabase(mysession.Id, mycomputer.Id);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                dtdata.Rows.Clear();
+
+
+                File.Copy(MiscClass.GetConfigValue("LogPath") + "\\papercut-print-log-" + DateTime.Now.ToString("yyyy-MM-dd") + ".csv", MiscClass.GetConfigValue("LogPath") + "\\papercut-print-log-" + DateTime.Now.ToString("yyyy-MM-dd") + " - Copy.csv", true);
+                if (MiscClass.IsFileLocked(MiscClass.GetConfigValue("LogPath") + "\\papercut-print-log-" + DateTime.Now.ToString("yyyy-MM-dd") + " - Copy.csv"))
+                {
+                    return;
+                }
+
+                try
+                {
+                    using (TextReader reader = File.OpenText(MiscClass.GetConfigValue("LogPath") + "\\papercut-print-log-" + DateTime.Now.ToString("yyyy-MM-dd") + " - Copy.csv"))
+                    {
+                        reader.ReadLine();
+                        // now initialize the CsvReader
+
+                        var parser = new CsvReader(new StringReader(reader.ReadToEnd())); // ...
+                        while (parser.Read())
+                        {
+                            dr = dtdata.NewRow();
+                            dr["Time"] = parser.GetField<DateTime>(0);
+                            dr["User"] = parser.GetField<string>(1);
+                            dr["Pages"] = parser.GetField<int>(2);
+                            dr["Copies"] = parser.GetField<int>(3);
+                            dr["Printer"] = parser.GetField<string>(4);
+                            dr["DocumentName"] = parser.GetField<string>(5);
+                            dr["Client"] = parser.GetField<string>(6);
+                            dr["PaperSize"] = parser.GetField<string>(7);
+                            dr["Language"] = parser.GetField<string>(8);
+                            dr["Height"] = parser.GetField<string>(9);
+                            dr["Width"] = parser.GetField<string>(10);
+                            dr["Duplex"] = parser.GetField<string>(11);
+                            dr["Grayscale"] = parser.GetField<string>(12);
+                            dr["Size"] = parser.GetField<string>(13);
+
+                            dtdata.Rows.Add(dr);
+
+                        }
+                    }
+
+                    pagescount = PrintJob.DumpJobsToDatabase(mysession.Id, mycomputer.Id, dtdata);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
@@ -409,7 +500,11 @@ namespace CafeClient
                 {
                     MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+
+               
             }
+
+            label_pagesprinted_value.Text = pagescount;
         }
 
         private void metroButton_pause_Click(object sender, EventArgs e)

@@ -41,6 +41,10 @@
             this.checkBox_autostart = new System.Windows.Forms.CheckBox();
             this.toolTip_startbutton = new System.Windows.Forms.ToolTip(this.components);
             this.checkBox_monitorprocess = new System.Windows.Forms.CheckBox();
+            this.label_logpath = new System.Windows.Forms.Label();
+            this.button_choosepath = new System.Windows.Forms.Button();
+            this.label_logpath_value = new System.Windows.Forms.Label();
+            this.folderBrowserDialog_logpath = new System.Windows.Forms.FolderBrowserDialog();
             this.SuspendLayout();
             // 
             // label_pcname
@@ -109,7 +113,7 @@
             this.metroButton_save.Cursor = System.Windows.Forms.Cursors.Hand;
             this.metroButton_save.Enabled = false;
             this.metroButton_save.ForeColor = System.Drawing.Color.White;
-            this.metroButton_save.Location = new System.Drawing.Point(332, 354);
+            this.metroButton_save.Location = new System.Drawing.Point(332, 396);
             this.metroButton_save.Name = "metroButton_save";
             this.metroButton_save.Size = new System.Drawing.Size(94, 23);
             this.metroButton_save.TabIndex = 6;
@@ -157,11 +161,43 @@
             this.checkBox_monitorprocess.UseVisualStyleBackColor = true;
             this.checkBox_monitorprocess.CheckedChanged += new System.EventHandler(this.checkBox_monitorprocess_CheckedChanged);
             // 
+            // label_logpath
+            // 
+            this.label_logpath.AutoSize = true;
+            this.label_logpath.Location = new System.Drawing.Point(24, 345);
+            this.label_logpath.Name = "label_logpath";
+            this.label_logpath.Size = new System.Drawing.Size(50, 13);
+            this.label_logpath.TabIndex = 10;
+            this.label_logpath.Text = "Log Path";
+            // 
+            // button_choosepath
+            // 
+            this.button_choosepath.Location = new System.Drawing.Point(26, 367);
+            this.button_choosepath.Name = "button_choosepath";
+            this.button_choosepath.Size = new System.Drawing.Size(88, 23);
+            this.button_choosepath.TabIndex = 11;
+            this.button_choosepath.Text = "Choose Folder";
+            this.button_choosepath.UseVisualStyleBackColor = true;
+            this.button_choosepath.Click += new System.EventHandler(this.button_choosepath_Click);
+            // 
+            // label_logpath_value
+            // 
+            this.label_logpath_value.AutoEllipsis = true;
+            this.label_logpath_value.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label_logpath_value.Location = new System.Drawing.Point(140, 372);
+            this.label_logpath_value.Name = "label_logpath_value";
+            this.label_logpath_value.Size = new System.Drawing.Size(286, 13);
+            this.label_logpath_value.TabIndex = 12;
+            this.label_logpath_value.Text = "Not Available";
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(449, 392);
+            this.ClientSize = new System.Drawing.Size(449, 435);
+            this.Controls.Add(this.label_logpath_value);
+            this.Controls.Add(this.button_choosepath);
+            this.Controls.Add(this.label_logpath);
             this.Controls.Add(this.checkBox_monitorprocess);
             this.Controls.Add(this.checkBox_autostart);
             this.Controls.Add(this.button_start);
@@ -196,5 +232,9 @@
         private System.Windows.Forms.CheckBox checkBox_autostart;
         private System.Windows.Forms.ToolTip toolTip_startbutton;
         private System.Windows.Forms.CheckBox checkBox_monitorprocess;
+        private System.Windows.Forms.Label label_logpath;
+        private System.Windows.Forms.Button button_choosepath;
+        private System.Windows.Forms.Label label_logpath_value;
+        private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog_logpath;
     }
 }

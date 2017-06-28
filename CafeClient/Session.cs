@@ -22,6 +22,7 @@ namespace CafeClient
         public object InvoicedBy { get; set; }
         public Guid Id { get; set; }
         public string SessionCode { get; set; }
+        public int PagesPrinted { get; set; }
 
         public int Hour { get; set; }
         public int Min { get; set; }
@@ -72,6 +73,7 @@ namespace CafeClient
                             ses.Status = dtreader.GetInt32(9);
                             ses.CreatedBy = dtreader.GetInt32(10);
                             ses.InvoicedBy = dtreader.GetValue(11);
+                            ses.PagesPrinted = dtreader.GetInt32(12);
                             
 
                             dtreader.NextResult();

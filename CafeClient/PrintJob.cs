@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Management;
@@ -44,13 +45,11 @@ namespace CafeClient
         public int PagesPrinted { get; set; }
 
 
-        public static void DumpJobsToDatabase(Guid sessionid,int computerid)
+        public static string DumpJobsToDatabase(Guid sessionid,int computerid,DataTable dt)
         {
 
             try
             {
-                ManagementObjectSearcher mos = new ManagementObjectSearcher("SELECT * FROM Win32_PrintJob");
-                ManagementObjectCollection moc = mos.Get();
 
                 using (SqlConnection connection = new SqlConnection(ConfigurationManager.ConnectionStrings["Connection"].ToString()))
                 {
@@ -58,43 +57,16 @@ namespace CafeClient
                     connection.Open();
                     SqlCommand command;
 
-                    foreach (ManagementBaseObject Mo in moc)
-                    {
 
-                        command = new SqlCommand("InsertSessionPrint", connection);
-                        command.CommandType = System.Data.CommandType.StoredProcedure;
-                        command.Parameters.AddWithValue("@sessionid", sessionid);
-                        command.Parameters.AddWithValue("@computerid", computerid);
-                        command.Parameters.AddWithValue("@jobid", Convert.ToInt32(Mo["JobId"].ToString()));
-                        command.Parameters.AddWithValue("@jobname", Mo["Name"].ToString());
-                        command.Parameters.AddWithValue("@printername", Mo["Name"].ToString().Split(',')[0]);
-                        command.Parameters.AddWithValue("@documentname", Mo["Document"].ToString());
-                        command.Parameters.AddWithValue("@statusmask", Mo["StatusMask"].ToString());
-                        command.Parameters.AddWithValue("@status", Mo["Status"].ToString());
-                        command.Parameters.AddWithValue("@totalpages", Convert.ToInt32(Mo["TotalPages"].ToString()));
-                        command.Parameters.AddWithValue("@starttime", DBNull.Value);
-                        command.Parameters.AddWithValue("@elapsedtime", DBNull.Value);
-                        command.Parameters.AddWithValue("@submittedtime", MiscClass.WmiDatetimeConverter(Mo["TimeSubmitted"].ToString()));
+                    command = new SqlCommand("InsertSessionPrint", connection);
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@sessionid", sessionid);
+                    command.Parameters.AddWithValue("@computerid", computerid);
+                    command.Parameters.AddWithValue("@logtable", dt);
 
-                        command.Parameters.AddWithValue("@papersize", Mo["PaperSize"].ToString());
-                        command.Parameters.AddWithValue("@paperwidth", Mo["PaperWidth"].ToString());
-                        command.Parameters.AddWithValue("@description", Mo["Description"].ToString());
-                        command.Parameters.AddWithValue("@color", Mo["Color"].ToString());
-                        command.Parameters.AddWithValue("@datatype", Mo["DataType"].ToString());
-                        command.Parameters.AddWithValue("@pagesprinted", Convert.ToInt32(Mo["PagesPrinted"].ToString()));
-
-                        command.ExecuteNonQuery();
-
-                        Mo.Dispose();
-                        
-                    }
-
-                        moc.Dispose();
-                        mos.Dispose();
-
-                     
-
+                    return Convert.ToInt32(command.ExecuteScalar()).ToString();
                 }
+
             }
             catch (Exception ex)
             {

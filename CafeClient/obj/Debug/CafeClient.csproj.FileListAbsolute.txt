@@ -14,3 +14,5 @@ C:\Users\DeLL\documents\visual studio 2013\Projects\CafeClient\CafeClient\obj\De
 C:\Users\DeLL\documents\visual studio 2013\Projects\CafeClient\CafeClient\obj\Debug\CafeClient.MainWindow.resources
 C:\Users\DeLL\documents\visual studio 2013\Projects\CafeClient\CafeClient\obj\Debug\CafeClient.AdminPassword.resources
 C:\Users\DeLL\documents\visual studio 2013\Projects\CafeClient\CafeClient\obj\Debug\CafeClient.CurrentlyActive.resources
+C:\Users\DeLL\documents\visual studio 2013\Projects\CafeClient\CafeClient\bin\Debug\CsvHelper.dll
+C:\Users\DeLL\documents\visual studio 2013\Projects\CafeClient\CafeClient\bin\Debug\CsvHelper.xml

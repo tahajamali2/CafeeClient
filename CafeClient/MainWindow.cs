@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using MetroFramework.Forms;
 using System.Net.NetworkInformation;
 using System.Configuration;
+using System.IO;
 
 namespace CafeClient
 {
@@ -97,6 +98,8 @@ namespace CafeClient
                 }
 
 
+                label_logpath_value.Text = GetConfigValue("LogPath").Equals("")?"Not Available":GetConfigValue("LogPath");
+
                 if (!label_pcname_value.Text.Equals("Not Available"))
                 {
                     button_start.Enabled = true;
@@ -105,10 +108,16 @@ namespace CafeClient
                     {
                         if (config.AppSettings.Settings["Autostart"].Value.Equals("Yes"))
                         {
-                            LockWindow lw = new LockWindow(pc,this);
-                            lw.Show();
-                            this.Visible = false;
-                            this.ShowInTaskbar = false;
+                            if (!label_logpath_value.Text.Equals("Not Available"))
+                            {
+                                if (Directory.Exists(label_logpath_value.Text))
+                                {
+                                    LockWindow lw = new LockWindow(pc, this);
+                                    lw.Show();
+                                    this.Visible = false;
+                                    this.ShowInTaskbar = false;
+                                }
+                            }
 
                         }
                     }
@@ -143,6 +152,7 @@ namespace CafeClient
         private void metroButton_save_Click(object sender, EventArgs e)
         {
             SetConfigValue("Adapter", listBox_adapters.SelectedItem.ToString());
+            SetConfigValue("LogPath", label_logpath_value.Text.Equals("Not Available") ? "" : label_logpath_value.Text);
             System.Diagnostics.Process.Start(Application.ExecutablePath); // to start new instance of application
             this.Close(); //to turn off current app
         }
@@ -172,7 +182,7 @@ namespace CafeClient
         {
             System.Configuration.Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 
-            return config.AppSettings.Settings[key].Value;
+            return config.AppSettings.Settings[key] == null ? "" : config.AppSettings.Settings[key].Value;
 
         }
 
@@ -194,10 +204,25 @@ namespace CafeClient
                             is_monitorable_public = "No";
                         }
 
-                        LockWindow lw = new LockWindow(pc, this);
-                        lw.Show();
-                        this.Visible = false;
-                        this.ShowInTaskbar = false;
+                        if (!GetConfigValue("LogPath").Equals(""))
+                        {
+                            if (Directory.Exists(GetConfigValue("LogPath")))
+                            {
+                                LockWindow lw = new LockWindow(pc, this);
+                                lw.Show();
+                                this.Visible = false;
+                                this.ShowInTaskbar = false;
+                            }
+                            else
+                            {
+                                MessageBox.Show("LogPath directory is not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                        }
+
+                        else
+                        {
+                            MessageBox.Show("LogPath is not set.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
                     }
                 }
             }
@@ -230,6 +255,14 @@ namespace CafeClient
             else
             {
                 SetConfigValue("MonitorCheck", "No");
+            }
+        }
+
+        private void button_choosepath_Click(object sender, EventArgs e)
+        {
+            if (folderBrowserDialog_logpath.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                label_logpath_value.Text = folderBrowserDialog_logpath.SelectedPath;
             }
         }
     }
